@@ -15,13 +15,8 @@ app.use(bodyParser.json());
 
 //------------------- Connection Establishment Between Application and Database -------------------//
 
-mongoose
-  .connect(
-    "mongodb+srv://disha123:hl6LMcJIED1eCZhr@cluster0.hrerz.mongodb.net/group20Database",
-    {
-      useNewUrlParser: true,
-    }
-  )
+mongoose.connect("mongodb+srv://disha123:hl6LMcJIED1eCZhr@cluster0.hrerz.mongodb.net/group20Database",
+    { useNewUrlParser: true,})
   .then(() => console.log("MongoDb is connected!"))
   .catch((err) => console.log(err));
 
@@ -30,7 +25,7 @@ app.use("/", route);
 app.use("*", (req, res) => {
   return res
     .status(400)
-    .send({ status: false, message: "plesae enter valid url endpoint" });
+    .send({ status: false, message: "please enter valid url endpoint" });
 });
 
 //------------------- Server Configuration -------------------//

@@ -59,63 +59,33 @@ const createUrl = async (req, res) => {
     //----------------- Intial Validation of Data ----------------//
 
     if (!isValidRequestBody(data))
-      return res.status(400).send({
-        status: false,
-        message: "Data required in request body!",
-      });
+      return res.status(400).send({status: false,message: "Data required in request body!",});
 
     if (!isValid(longUrl))
-      return res
-        .status(400)
-        .send({ status: false, message: "Please provide longURL!" });
+      return res.status(400).send({ status: false, message: "Please provide longURL!" });
 
     if (!regexUrl.test(longUrl.trim()) || !validUrl.isWebUri(longUrl))
-      return res.status(400).send({
-        status: false,
-        message: "Provide valid url longUrl in request!",
+      return res.status(400).send({status: false,message: "Provide valid url longUrl in request!",
       });
 
-    //--------- Get DAta from the Cache Memory ---------->>
+    //--------- Get Data from the Cache Memory ---------->>
 
     let cahcelongUrl = await GET_ASYNC(`${longUrl}`);
     console.log("redis data");
 
     if (cahcelongUrl) {
-      return res.status(200).send({
-        status: true,
-        message: "Data from Redis",
-        data: JSON.parse(cahcelongUrl),
-      });
+      return res.status(200).send({ status: true, message: "Data from Redis", data: JSON.parse(cahcelongUrl),});
     }
 
     //----- Find Data From Database and Set in Cache --------------->>
 
-    const checklongUrl = await urlModel
-      .findOne({ longUrl: longUrl })
-      .select({ createdAt: 0, updatedAt: 0, __v: 0 });
+    const checklongUrl = await urlModel.findOne({ longUrl: longUrl }).select({ createdAt: 0, updatedAt: 0, __v: 0 ,_id:0});
 
     if (checklongUrl) {
-      await SET_ASYNC(
-        `${longUrl}`,
-        JSON.stringify(checklongUrl),
-        "EX",
-        timeLimit
-      );
-      return res.status(200).send({
-        status: true,
-        message: "data from mongoDb server",
-        data: checklongUrl,
-      });
+      await SET_ASYNC(`${longUrl}`,JSON.stringify(checklongUrl),"EX",timeLimit );
+      return res.status(200).send({ status: true, message: "data from mongoDb server",  data: checklongUrl });
     }
-    //------- Old Method -----------//
-    /*  redisClient.set(`${longUrl}`, JSON.stringify(checklongUrl), function (err, reply) {
-        if (err) throw err;
-        redisClient.expire(`${longUrl}`, 60 * 20, function (err, reply) {
-          if (err) throw err;
-          console.log(reply)})}) */
-
-    // ---------------- Create Urlcode -------------------->>
-
+    
     const urlCode = shortid.generate(longUrl).toLowerCase();
 
     const shortUrl = baseUrl + "/" + urlCode;
@@ -131,24 +101,11 @@ const createUrl = async (req, res) => {
       shortUrl: createData.shortUrl,
     };
 
-    //-------Old Method ------------//
-    /* redisClient.set(`${longUrl}`, JSON.stringify(newData), function (err, reply) {
-      if (err) throw err;
-      redisClient.expire(`${longUrl}`, 60 * 20, function (err, reply) {
-        if (err) throw err;
-        console.log(reply)
-      })}) */
-
-    //---------------Set Data in Chache Memory Server-------->>
 
     await SET_ASYNC(`${longUrl}`, JSON.stringify(newData), "EX", timeLimit);
-    await SET_ASYNC(`${shortUrl}`, JSON.stringify(longUrl));
+ 
 
-    return res.status(201).send({
-      status: true,
-      message: "data create in mongoDb server and set to redis",
-      data: newData,
-    });
+    return res.status(201).send({status: true,message: "data create in mongoDb server and set to redis",data: newData,});
   } catch (err) {
     return res.status(500).send({ status: false, message: err.message });
   }
@@ -163,10 +120,7 @@ const getUrl = async function (req, res) {
     //---------- validation --------->>
 
     if (!shortid.isValid(urlCode))
-      return res.status(400).send({
-        status: false,
-        massage: "Enter valid length of shortid between 7-14 characters...!",
-      });
+      return res.status(400).send({ status: false, massage: "Enter valid length of shortid between 7-14 characters...!",});
 
     //----------- Get Data From Cache Memory ----->>
 

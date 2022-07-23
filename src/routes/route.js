@@ -1,6 +1,6 @@
 //------------------- Importing Modules -------------------//
 
-const express = require("express");
+const express = require("express");  //post,get 
 const router = express.Router();
 const { createUrl, getUrl } = require("../controllers/urlController");
 
